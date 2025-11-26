@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="App/App.csproj" />
+  <Project Path="DAL/DAL.csproj" />
+  <Project Path="WebApi/WebApi.csproj" Id="ac6a4fd8-d9a0-41e0-8f69-86e9647ce877" />
+</Solution>
