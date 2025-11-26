@@ -1,14 +1,14 @@
-﻿using Book.Models;
+﻿
+using Book.Models;
 using Book.Models.DTO.Stories;
 
-
-namespace App.Interfaces.Repository
+namespace App.Interfaces.Service
 {
-    public interface IStorieRepository
+    public interface IStorieService
     {
         Task<Storie> GetStorie(int id);
         Task<List<Storie>> GetAllStories();
-        Task<Storie> CreateStorie(Storie newStorie);
+        Task<Storie> CreateStorie(CreateStorie newStorie);
         Task<Storie> UpdateStorie(int id, UpdateStorie newData);
         Task DeleteStorie(int id);
     }

@@ -1,11 +1,13 @@
 ﻿using App.Interfaces.Repository;
+using App.Interfaces.Service;
+using App.Services;
 using Book.Models;
 using DAL;
 using DAL.Repository;
 using Microsoft.EntityFrameworkCore;
 using WebApi.MiddleWare;
+using static App.Services.StorieService;
 using static DAL.Repository.ChoiceRepository;
-using static DAL.Repository.StorieRepository;
 using static WebApi.Controllers.PageController;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -24,7 +26,7 @@ builder.Services.AddScoped<IStorieRepository, StorieRepository>();
 builder.Services.AddScoped<IPageRepository, PageRepository>();
 builder.Services.AddScoped<PageAddChoices>(provider =>
 {
-    IPageRepository pageRepo = provider.GetRequiredService<IPageRepository>();
+    IPageService pageRepo = provider.GetRequiredService<IPageService>();
     
     return (int id, Choice[] choices) => pageRepo.PageAddChoices(id, choices);
 });
@@ -40,7 +42,16 @@ builder.Services.AddScoped<GetPage>(provider =>
 
     return (int id) => pageRepo.GetPage(id);
 });
+builder.Services.AddScoped<ChoiceService.GetPage>(provider =>
+{
+    IPageRepository pageRepo = provider.GetRequiredService<IPageRepository>();
+
+    return (int id) => pageRepo.GetPage(id);
+});
 builder.Services.AddScoped<IChoiceRepository, ChoiceRepository>();
+builder.Services.AddScoped<IStorieService, StorieService>();
+builder.Services.AddScoped<IPageService, PageService>();
+builder.Services.AddScoped<IChoiceService, ChoiceService>();
 
 // Add controllers and swagger
 builder.Services.AddControllers();

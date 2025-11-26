@@ -7,18 +7,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DAL.Repository
 {
-    public class StorieRepository : IStorieRepository
-    {
-        public delegate Task<Page> GetPage(int id);
-
-        private readonly LibrairyContext _dbContext;
-        private readonly GetPage _getPage;
-
-        public StorieRepository(LibrairyContext dbContext, GetPage getPage)
-        {
-            _dbContext = dbContext;
-            _getPage = getPage;
-        }
+    public class StorieRepository : BaseRepository, IStorieRepository
+    {                        
+        public StorieRepository(LibrairyContext dbContext) : base(dbContext) { }
 
         public async Task<Storie> GetStorie(int id) =>
             await _dbContext.Storie.FindAsync(id)
@@ -26,34 +17,21 @@ namespace DAL.Repository
         public async Task<List<Storie>> GetAllStories() =>
             await _dbContext.Storie.ToListAsync()
             ?? throw new NotFound();
-        public async Task<Storie> CreateStorie(CreateStorie newStorie)
-        {
-            Storie storie = newStorie.toStorie();
-
-            _dbContext.Storie.Add(storie);
+        public async Task<Storie> CreateStorie(Storie newStorie)
+        {            
+            _dbContext.Storie.Add(newStorie);
             await _dbContext.SaveChangesAsync();
 
-            return storie;
+            return newStorie;
         }
         public async Task<Storie> UpdateStorie(int id, UpdateStorie newData)
         {
-            Storie storie = await _dbContext.Storie.FindAsync(id)
-                ?? throw new NotFound();
+            Storie storie = await GetStorie(id);
 
             storie.Title = newData.title ?? storie.Title;
-            storie.Statut = newData.statut ?? storie.Statut;            
-            storie.Description = newData.description ?? storie.Description;
-
-            if(newData.firstPage is not null)
-            {
-                Page firstPage = await _getPage(newData.firstPage.Value)
-                    ?? throw new NotFound();
-
-                if(firstPage.StorieId != storie.Id)
-                    throw new UnAuthorize();
-
-                storie.FirstPage = newData.firstPage;
-            }
+            storie.Statut = newData.statut ?? storie.Statut;   
+            storie.FirstPage = newData.firstPage ?? storie.FirstPage;
+            storie.Description = newData.description ?? storie.Description;            
 
             await _dbContext.SaveChangesAsync();
 
