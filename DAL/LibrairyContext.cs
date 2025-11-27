@@ -1,7 +1,9 @@
 ﻿
 
-using Microsoft.EntityFrameworkCore;
+using App.Models;
 using Book.Models;
+using DAL.Models.Users;
+using Microsoft.EntityFrameworkCore;
 
 namespace DAL
 {
@@ -11,6 +13,10 @@ namespace DAL
         public DbSet<Storie> Storie { get; set; }
         public DbSet<Page> Page { get; set; }
         public DbSet<Choice> Choice { get; set; }
+
+        public DbSet<UserModel> UserModel { get; set; }
+        public DbSet<UserStorieGroup> UserStorieGroups { get; set; }
+        public DbSet<UserStorieItem> UserStorieItems { get; set; }
 
         public LibrairyContext(DbContextOptions<LibrairyContext> options)
             : base(options)
@@ -109,11 +115,75 @@ namespace DAL
                   .HasForeignKey(s => s.NextPage)
                   .OnDelete(DeleteBehavior.Cascade);
             });
+
+            // --- USER / GROUP / ITEM mappings (align with DAL.Models.Users) ---
+
+            // UserModel (persisted user)
+            modelBuilder.Entity<UserModel>(entity =>
+            {
+                entity.HasKey(u => u.Id);
+
+                // StoryGroups navigation: 1 UserModel -> N UserStorieGroup
+                entity.HasMany(u => u.StoryGroups)
+                      .WithOne(g => g.User)
+                      .HasForeignKey(g => g.UserId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // UserStorieGroup
+            modelBuilder.Entity<UserStorieGroup>(entity =>
+            {
+                entity.HasKey(g => g.Id);
+
+                // Optional: unique index to prevent duplicate (UserId, StorieId)
+                entity.HasIndex(g => new { g.UserId, g.StorieId }).IsUnique();
+
+                // link to UserModel
+                entity.HasOne(g => g.User)
+                      .WithMany(u => u.StoryGroups)
+                      .HasForeignKey(g => g.UserId)
+                      .IsRequired()
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                // link to Storie (book model)
+                entity.HasOne(g => g.Storie)
+                      .WithMany()
+                      .HasForeignKey(g => g.StorieId)
+                      .IsRequired()
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                // Items collection
+                entity.HasMany(g => g.Items)
+                      .WithOne(i => i.UserStorieGroup)
+                      .HasForeignKey(i => i.UserStorieGroupId)
+                      .IsRequired()
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // UserStorieItem
+            modelBuilder.Entity<UserStorieItem>(entity =>
+            {
+                entity.HasKey(i => i.Id);
+
+                // link to group
+                entity.HasOne(i => i.UserStorieGroup)
+                      .WithMany(g => g.Items)
+                      .HasForeignKey(i => i.UserStorieGroupId)
+                      .IsRequired()
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                // link to Page
+                entity.HasOne(i => i.Page)
+                      .WithMany()
+                      .HasForeignKey(i => i.PageId)
+                      .IsRequired()
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
         }
     }
 
 }
 /*
 dotnet ef migrations add InitialCreate --project DAL --startup-project Book
-dotnet ef database update --project DAL --startup-project Book
+dotnet ef database update --project DAL --startup-project WebApi
  */

@@ -19,6 +19,65 @@ namespace DAL.Migrations
                 .HasAnnotation("ProductVersion", "8.0.0")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
+            modelBuilder.Entity("App.Models.Users.User", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsAdmin")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsWritter")
+                        .HasColumnType("tinyint(1)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("App.Models.Users.UserStorieGroup", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<int>("StorieId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StorieId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserStorieGroups");
+                });
+
+            modelBuilder.Entity("App.Models.Users.UserStorieItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<int>("PageId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserStorieGroupId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PageId");
+
+                    b.HasIndex("UserStorieGroupId");
+
+                    b.ToTable("UserStorieItems");
+                });
+
             modelBuilder.Entity("Book.Models.Choice", b =>
                 {
                     b.Property<int>("Id")
@@ -105,6 +164,44 @@ namespace DAL.Migrations
                     b.ToTable("Storie");
                 });
 
+            modelBuilder.Entity("App.Models.Users.UserStorieGroup", b =>
+                {
+                    b.HasOne("Book.Models.Storie", "Storie")
+                        .WithMany()
+                        .HasForeignKey("StorieId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("App.Models.Users.User", "User")
+                        .WithMany("StoryGroups")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Storie");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("App.Models.Users.UserStorieItem", b =>
+                {
+                    b.HasOne("Book.Models.Page", "Page")
+                        .WithMany()
+                        .HasForeignKey("PageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("App.Models.Users.UserStorieGroup", "UserStorieGroup")
+                        .WithMany("Items")
+                        .HasForeignKey("UserStorieGroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Page");
+
+                    b.Navigation("UserStorieGroup");
+                });
+
             modelBuilder.Entity("Book.Models.Choice", b =>
                 {
                     b.HasOne("Book.Models.Page", null)
@@ -135,6 +232,16 @@ namespace DAL.Migrations
                         .WithMany()
                         .HasForeignKey("FirstPage")
                         .OnDelete(DeleteBehavior.SetNull);
+                });
+
+            modelBuilder.Entity("App.Models.Users.User", b =>
+                {
+                    b.Navigation("StoryGroups");
+                });
+
+            modelBuilder.Entity("App.Models.Users.UserStorieGroup", b =>
+                {
+                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("Book.Models.Page", b =>
